@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulador Nutanix NCA 6.10 | Quantyra</title>
+
+  <!-- Bancos de preguntas separados -->
+  <script src="data/questions_test_a.js"></script>
+  <script src="data/questions_test_b.js"></script>
+  <script src="data/questions_test_c.js"></script>
+  <script src="data/questions_test_d.js"></script>
+  <script src="data/questions_test_e.js"></script>
+  <script src="data/questions_test_f.js"></script>
+
+  <style>
+    :root{
+      --bg:#070b12;
+      --panel:#101827;
+      --panel2:#0b1220;
+      --text:#e5eefc;
+      --muted:#9fb3d1;
+      --cyan:#28d7ff;
+      --blue:#2f6df3;
+      --ok:#2dd4bf;
+      --bad:#fb7185;
+      --line:#1f2a3d;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      background:radial-gradient(circle at top,#132039 0,#070b12 42%,#03050a 100%);
+      color:var(--text);
+      font-family:Inter,Segoe UI,Arial,sans-serif;
+    }
+    header{
+      padding:28px 18px 32px;
+      text-align:center;
+      border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg,rgba(40,215,255,.08),rgba(0,0,0,0));
+    }
+    h1{font-size:36px;margin:26px 0 24px;letter-spacing:.01em}
+    h2{font-size:27px;margin:12px 0 26px}
+    .brand{letter-spacing:.34em;color:var(--cyan);font-weight:900;font-size:16px}
+    .tag{color:var(--muted);font-size:14px}
+    .wrap{max-width:1160px;margin:0 auto;padding:28px 18px}
+    .card{
+      background:rgba(16,24,39,.9);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:26px;
+      box-shadow:0 20px 60px rgba(0,0,0,.35);
+    }
+    .small{font-size:14px;color:var(--muted);line-height:1.5}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-top:20px}
+    label{display:block;color:#a9c7ed;font-size:14px;margin-bottom:8px}
+    select,button{
+      width:100%;
+      border:1px solid var(--line);
+      border-radius:13px;
+      background:#0b1220;
+      color:var(--text);
+      padding:14px 16px;
+      font-size:16px;
+      outline:none;
+    }
+    button{
+      cursor:pointer;
+      background:linear-gradient(135deg,#1fa8e5,#2f6df3);
+      border:0;
+      font-weight:900;
+      letter-spacing:.02em;
+    }
+    button.secondary{background:#111827;border:1px solid var(--line)}
+    .hidden{display:none!important}
+    .actions{display:flex;gap:14px;margin-top:22px;flex-wrap:wrap}
+    .actions button{flex:1;min-width:190px}
+    .pill{display:inline-flex;align-items:center;border:1px solid var(--line);padding:9px 14px;border-radius:999px;color:#9cc4f7;font-size:14px;background:#0b1220}
+    .topbar{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;align-items:center;margin-bottom:14px}
+    .progress{height:9px;background:#0b1220;border-radius:999px;overflow:hidden;border:1px solid var(--line);margin:12px 0 16px}
+    .bar{height:100%;background:linear-gradient(90deg,var(--cyan),var(--blue));width:0}
+    .question{font-size:24px;line-height:1.35;margin:18px 0 22px}
+    .options{display:grid;gap:12px}
+    .option{display:flex;gap:12px;align-items:flex-start;background:#0b1220;border:1px solid #1e344f;padding:15px 16px;border-radius:14px;cursor:pointer;color:#a9c7ed}
+    .option input{margin-top:3px;transform:scale(1.05)}
+    .option.selected{border-color:var(--blue);background:#0d1b33;color:#e5eefc}
+    .option.correct{border-color:var(--ok);background:rgba(45,212,191,.12);color:#eafffb}
+    .option.wrong{border-color:var(--bad);background:rgba(251,113,133,.12);color:#ffe7ed}
+    .answerBox{margin-top:17px;padding:16px;border:1px solid rgba(45,212,191,.38);background:rgba(45,212,191,.08);border-radius:14px;color:#eafffb;line-height:1.5}
+    .result{font-size:20px;line-height:1.6}
+    .reviewItem{border-top:1px solid var(--line);padding:15px 0;line-height:1.5}
+    @media(max-width:720px){h1{font-size:28px}.question{font-size:20px}.card{padding:20px}.wrap{padding:20px 12px}}
+  </style>
+</head>
+<body>
+<header>
+  <div class="brand">QUANTYRA</div>
+  <h1>Simulador Nutanix NCA 6.10</h1>
+  <div class="tag">DATA. INSIGHT. PRECISION. GROWTH.</div>
+</header>
+
+<main class="wrap">
+  <section id="setup" class="card">
+    <h2>Configuración del simulador</h2>
+    <p class="small">Modo nocturno, bancos separados por Practice Test, preguntas y respuestas aleatorias por defecto. Incluye modo práctica y modo examen real.</p>
+
+    <div class="grid">
+      <div>
+        <label>Banco de preguntas</label>
+        <select id="bank">
+          <option value="all">Todos los Practice Tests</option>
+          <option value="A">Practice Test A</option>
+          <option value="B">Practice Test B</option>
+          <option value="C">Practice Test C</option>
+          <option value="D">Practice Test D</option>
+          <option value="E">Practice Test E</option>
+          <option value="F">Practice Test F</option>
+        </select>
+      </div>
+      <div>
+        <label>Modo</label>
+        <select id="mode">
+          <option value="practice">Prueba de examen práctico</option>
+          <option value="exam">Examen real</option>
+        </select>
+      </div>
+      <div>
+        <label>Cantidad de preguntas</label>
+        <select id="count">
+          <option value="25">25</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+          <option value="all">Todas</option>
+        </select>
+      </div>
+      <div>
+        <label>Aleatorización</label>
+        <select id="shuffle">
+          <option value="yes">Preguntas y respuestas aleatorias</option>
+          <option value="no">Orden original</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button onclick="startExam()">Iniciar simulador</button>
+    </div>
+  </section>
+
+  <section id="quiz" class="card hidden">
+    <div class="topbar">
+      <span class="pill" id="modeLabel"></span>
+      <span class="pill" id="counter"></span>
+      <span class="pill" id="scoreLive"></span>
+    </div>
+    <div class="progress"><div class="bar" id="bar"></div></div>
+    <div class="small" id="source"></div>
+    <div class="question" id="question"></div>
+    <div class="options" id="options"></div>
+    <div id="answerBox" class="answerBox hidden"></div>
+    <div class="actions">
+      <button class="secondary" onclick="backToSetup()">Salir</button>
+      <button id="nextBtn" onclick="nextQuestion()">Siguiente pregunta</button>
+    </div>
+  </section>
+
+  <section id="results" class="card hidden"></section>
+</main>
+
+<script>
+let pool = [];
+let current = 0;
+let answers = [];
+let practice = false;
+let revealed = false;
+let activeBankLabel = 'Todos los Practice Tests';
+
+function getQuestionBanks(){
+  return {
+    A: window.NCA_QUESTIONS_TEST_A || [],
+    B: window.NCA_QUESTIONS_TEST_B || [],
+    C: window.NCA_QUESTIONS_TEST_C || [],
+    D: window.NCA_QUESTIONS_TEST_D || [],
+    E: window.NCA_QUESTIONS_TEST_E || [],
+    F: window.NCA_QUESTIONS_TEST_F || []
+  };
+}
+
+function shuffleArray(arr){
+  for(let i = arr.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function normalizeText(value){
+  return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+function escapeHtml(value){
+  return String(value || '').replace(/[&<>"']/g, char => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+  }[char]));
+}
+
+function buildQuestionPool(bankChoice){
+  const banks = getQuestionBanks();
+  if(bankChoice === 'all') return Object.values(banks).flat();
+  return banks[bankChoice] || [];
+}
+
+function updateBankLabels(){
+  const banks = getQuestionBanks();
+  const select = document.getElementById('bank');
+  if(!select) return;
+
+  [...select.options].forEach(option => {
+    if(option.value === 'all'){
+      const total = Object.values(banks).reduce((sum, bank) => sum + bank.length, 0);
+      option.textContent = `Todos los Practice Tests (${total})`;
+    } else {
+      const count = (banks[option.value] || []).length;
+      option.textContent = `Practice Test ${option.value} (${count})`;
+    }
+  });
+}
+
+function startExam(){
+  practice = document.getElementById('mode').value === 'practice';
+  const qty = document.getElementById('count').value;
+  const random = document.getElementById('shuffle').value === 'yes';
+  const bankChoice = document.getElementById('bank').value;
+
+  activeBankLabel = bankChoice === 'all' ? 'Todos los Practice Tests' : `Practice Test ${bankChoice}`;
+
+  pool = [...buildQuestionPool(bankChoice)].filter(q =>
+    q && q.question && Array.isArray(q.options) && q.options.length === 4 &&
+    Array.isArray(q.correctAnswers) && q.correctAnswers.length >= 1
+  );
+
+  if(!pool.length){
+    alert('No se encontraron preguntas para este banco. Revisá que los archivos .js estén dentro de data/ y que los nombres coincidan exactamente.');
+    return;
+  }
+
+  if(random) shuffleArray(pool);
+  if(qty !== 'all') pool = pool.slice(0, Number(qty));
+
+  pool = pool.map(q => {
+    const copy = JSON.parse(JSON.stringify(q));
+    if(random) shuffleArray(copy.options);
+    return copy;
+  });
+
+  current = 0;
+  answers = [];
+  revealed = false;
+
+  document.getElementById('setup').classList.add('hidden');
+  document.getElementById('results').classList.add('hidden');
+  document.getElementById('quiz').classList.remove('hidden');
+  renderQuestion();
+}
+
+function selectedValues(){
+  return [...document.querySelectorAll('input[name="opt"]:checked')].map(input => input.value);
+}
+
+function isCorrect(question, selected){
+  const correct = (question.correctAnswers || []).map(normalizeText).filter(Boolean);
+  const chosen = selected.map(normalizeText).filter(Boolean);
+  return correct.length === chosen.length && correct.every(answer => chosen.includes(answer));
+}
+
+function renderQuestion(){
+  revealed = false;
+  const question = pool[current];
+
+  document.getElementById('answerBox').classList.add('hidden');
+  document.getElementById('answerBox').innerHTML = '';
+  document.getElementById('modeLabel').textContent = practice ? 'Modo práctica' : 'Modo examen real';
+  document.getElementById('counter').textContent = `Pregunta ${current + 1} de ${pool.length}`;
+  document.getElementById('scoreLive').textContent = `Respondidas: ${answers.filter(Boolean).length}`;
+  document.getElementById('bar').style.width = `${(current / pool.length) * 100}%`;
+  document.getElementById('source').textContent = `Banco: ${activeBankLabel} | Fuente: ${question.source || 'PDF'} | ID: ${question.id || '-'}`;
+  document.getElementById('question').textContent = question.question;
+
+  const inputType = question.multiple ? 'checkbox' : 'radio';
+  document.getElementById('options').innerHTML = question.options.map(option => `
+    <label class="option">
+      <input type="${inputType}" name="opt" value="${escapeHtml(option)}">
+      <span>${escapeHtml(option)}</span>
+    </label>
+  `).join('');
+
+  document.querySelectorAll('.option').forEach(optionElement => {
+    optionElement.addEventListener('click', () => {
+      setTimeout(() => {
+        document.querySelectorAll('.option').forEach(item => {
+          item.classList.toggle('selected', item.querySelector('input').checked);
+        });
+      }, 0);
+    });
+  });
+
+  document.getElementById('nextBtn').textContent = practice ? 'Ver respuesta / Siguiente' : 'Siguiente pregunta';
+}
+
+function nextQuestion(){
+  const question = pool[current];
+  const selected = selectedValues();
+
+  if(!selected.length){
+    alert('Seleccioná una respuesta antes de continuar.');
+    return;
+  }
+
+  if(practice && !revealed){
+    revealed = true;
+    const correct = (question.correctAnswers || []).map(normalizeText);
+
+    document.querySelectorAll('.option').forEach(optionElement => {
+      const value = normalizeText(optionElement.querySelector('input').value);
+      const checked = optionElement.querySelector('input').checked;
+      if(correct.includes(value)) optionElement.classList.add('correct');
+      else if(checked) optionElement.classList.add('wrong');
+    });
+
+    document.getElementById('answerBox').classList.remove('hidden');
+    document.getElementById('answerBox').innerHTML = '<b>Respuesta correcta:</b><br>' + escapeHtml((question.correctAnswers || []).join(' / '));
+    document.getElementById('nextBtn').textContent = current === pool.length - 1 ? 'Finalizar' : 'Siguiente pregunta';
+    return;
+  }
+
+  answers[current] = {
+    id: question.id,
+    question: question.question,
+    selected,
+    correctAnswers: question.correctAnswers || [],
+    ok: isCorrect(question, selected)
+  };
+
+  if(current < pool.length - 1){
+    current++;
+    renderQuestion();
+  } else {
+    showResults();
+  }
+}
+
+function showResults(){
+  document.getElementById('quiz').classList.add('hidden');
+  document.getElementById('results').classList.remove('hidden');
+
+  const correctCount = answers.filter(answer => answer && answer.ok).length;
+  const percentage = Math.round((correctCount / pool.length) * 100);
+  const wrongAnswers = answers.filter(answer => answer && !answer.ok);
+
+  document.getElementById('results').innerHTML = `
+    <h2>Resultado final</h2>
+    <div class="result"><b>${correctCount}/${pool.length}</b> correctas (${percentage}%).</div>
+    <p class="small">Banco utilizado: ${escapeHtml(activeBankLabel)}</p>
+    <div class="actions"><button onclick="backToSetup()">Nuevo intento</button></div>
+    <h3>Revisión de errores</h3>
+    ${wrongAnswers.length ? wrongAnswers.map(answer => `
+      <div class="reviewItem">
+        <b>${escapeHtml(answer.question)}</b><br>
+        <span class="small">Tu respuesta: ${escapeHtml(answer.selected.join(' / ') || '-')}</span><br>
+        <span class="small">Correcta: ${escapeHtml(answer.correctAnswers.join(' / ') || '-')}</span>
+      </div>
+    `).join('') : '<p class="small">Sin errores en este intento.</p>'}
+  `;
+}
+
+function backToSetup(){
+  document.getElementById('quiz').classList.add('hidden');
+  document.getElementById('results').classList.add('hidden');
+  document.getElementById('setup').classList.remove('hidden');
+}
+
+window.addEventListener('DOMContentLoaded', updateBankLabels);
+</script>
+</body>
+</html>
