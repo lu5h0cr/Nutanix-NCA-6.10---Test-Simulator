@@ -1,3 +1,5 @@
+https://lu5h0cr.github.io/Nutanix-NCA-6.10---Test-Simulator/
+
 # Simulador Nutanix NCA 6.10 v2Quantyra
 
 Simulador web de práctica para el examen **Nutanix Certified Associate NCA 6.10**, desarrollado como uno de los primeros proyectos de prueba de **Quantyra**.
