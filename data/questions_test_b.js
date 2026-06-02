@@ -118,7 +118,7 @@ window.NCA_QUESTIONS_TEST_B = [
       "Storage consistency check"
     ],
     "correctAnswers": [
-      "Data resiliency check"
+      "Data resiliency check",
       "Storage consistency check"
     ],
     "multiple": true,
