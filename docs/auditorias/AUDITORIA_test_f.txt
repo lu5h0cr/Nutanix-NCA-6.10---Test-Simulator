@@ -1,0 +1,23 @@
+AUDITORÍA - Practice Test F - Nutanix NCA 6.10
+Proyecto: Quantyra Simulador NCA 6.10
+
+Resultado estructural:
+- Total de preguntas incluidas: 50
+- Preguntas con 4 opciones: 50/50
+- Preguntas de selección única: 45
+- Preguntas de selección múltiple: 5
+
+Preguntas con multiple: true:
+- NCA610-F-009 | Select two | 2 respuestas correctas
+- NCA610-F-019 | Select three | 3 respuestas correctas
+- NCA610-F-030 | Select two | 2 respuestas correctas
+- NCA610-F-045 | Select three | 3 respuestas correctas
+- NCA610-F-048 | Select two | 2 respuestas correctas
+
+Notas:
+- El banco fue separado para mantener Practice Test F como fuente independiente.
+- Se conserva el alias temporal window.NCA_QUESTIONS = window.NCA_QUESTIONS_TEST_F para pruebas directas.
+- Para la versión final multi-banco, se recomienda cargar este archivo junto con question_banks.js y usar window.NCA_QUESTION_BANKS.
+
+Errores estructurales encontrados:
+- Ninguno.

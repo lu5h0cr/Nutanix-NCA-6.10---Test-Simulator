@@ -1,0 +1,8 @@
+AUDITORÍA - Practice Test C
+Fuente: Nutanix NCA 6.10 - Practice Test C.pdf.pdf
+Total de preguntas incluidas: 50
+Todas las preguntas incluidas tienen 4 opciones.
+multiple=true únicamente cuando hay más de una respuesta correcta.
+Preguntas de selección múltiple detectadas: 8 (Select two), 29 (Select three), 41 (Select three), 47 (Select two).
+Preguntas faltantes: ninguna. Test C contiene preguntas 1 a 50 visibles.
+Estado estructural: OK, sin incidencias.

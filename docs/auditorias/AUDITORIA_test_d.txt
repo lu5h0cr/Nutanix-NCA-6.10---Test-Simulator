@@ -1,0 +1,6 @@
+AUDITORIA - Practice Test D
+Total preguntas: 50
+Preguntas con != 4 opciones: []
+Preguntas multiple=true: 2 (3 correctas), 6 (3 correctas), 14 (2 correctas), 21 (2 correctas), 26 (2 correctas), 31 (2 correctas)
+Incidencias estructurales: Ninguna
+Notas: Test D visible completo de la pregunta 1 a la 50. No se inventaron preguntas faltantes.

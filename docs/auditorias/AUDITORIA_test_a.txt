@@ -1,0 +1,5 @@
+Practice Test A
+Preguntas extraidas: 47
+Preguntas faltantes/no visibles en el PDF original: 13, 41, 44
+Errores estructurales detectados: 0
+Detalles: []

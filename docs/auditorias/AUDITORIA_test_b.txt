@@ -1,0 +1,9 @@
+AUDITORIA Practice Test B
+========================
+Preguntas incluidas: 49
+Rango visible: 1-33 y 35-50
+Pregunta 34: no aparece visible en el PDF revisado; no se inventó.
+Pregunta 7: el enunciado dice Select two, pero el PDF solo muestra una opción resaltada. Queda marcada para revisión manual.
+
+Validación estructural:
+NCA610-B-007 multiple=true pero tiene 1 respuesta correcta
