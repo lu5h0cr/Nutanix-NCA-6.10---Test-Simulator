@@ -87,6 +87,14 @@
     .option.selected{border-color:var(--blue);background:#0d1b33;color:#e5eefc}
     .option.correct{border-color:var(--ok);background:rgba(45,212,191,.12);color:#eafffb}
     .option.wrong{border-color:var(--bad);background:rgba(251,113,133,.12);color:#ffe7ed}
+    .answerBox.warn{border-color:rgba(251,113,133,.55);background:rgba(251,113,133,.09);color:#ffe7ed}
+    .scoreCard{margin:18px 0;padding:18px;border:1px solid var(--line);border-radius:16px;background:#0b1220}
+    .scoreBig{font-size:34px;font-weight:900;margin:8px 0}
+    .pass{color:var(--ok);font-weight:900}
+    .fail{color:var(--bad);font-weight:900}
+    .domainGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-top:14px}
+    .domainCard{border:1px solid var(--line);border-radius:14px;padding:14px;background:rgba(15,23,42,.7)}
+    .domainCard b{display:block;margin-bottom:8px}
     .answerBox{margin-top:17px;padding:16px;border:1px solid rgba(45,212,191,.38);background:rgba(45,212,191,.08);border-radius:14px;color:#eafffb;line-height:1.5}
     .result{font-size:20px;line-height:1.6}
     .reviewItem{border-top:1px solid var(--line);padding:15px 0;line-height:1.5}
@@ -103,7 +111,7 @@
 <main class="wrap">
   <section id="setup" class="card">
     <h2>Configuración del simulador</h2>
-    <p class="small">Modo nocturno, bancos separados por Practice Test, preguntas y respuestas aleatorias por defecto. Incluye modo práctica y modo examen real.</p>
+    <p class="small">Modo nocturno, bancos separados por Practice Test, preguntas y respuestas aleatorias por defecto. Incluye modo práctica, modo examen real, validación estricta en selección múltiple y puntaje simulado tipo examen.</p>
 
     <div class="grid">
       <div>
@@ -176,6 +184,19 @@ let practice = false;
 let revealed = false;
 let activeBankLabel = 'Todos los Practice Tests';
 
+// Escala simulada para práctica. Nutanix publica el formato y objetivos del examen,
+// pero la ponderación interna real puede variar y no se replica oficialmente aquí.
+const SCORE_MIN = 0;
+const SCORE_MAX = 6000;
+const PASS_SCORE = 3000;
+
+const DOMAIN_DEFINITIONS = [
+  {key:'lcm', label:'Lifecycle Management', keywords:['lcm','life cycle','lifecycle','aos','firmware','upgrade','inventory','dark site','pre-check','precheck','compatibility','bundle','hypervisor update','software update','scheduled status']},
+  {key:'basic', label:'Nutanix Basic Administration', keywords:['vm ','virtual machine','prism element','prism central','settings','licensing','license','rbac','ngt','snapshot','clone','volume group','protection policy','recovery plan','guest shutdown']},
+  {key:'health', label:'Environmental Health', keywords:['ncc','health','alert','alerts','event','support','case','runway','performance','analysis','cpu','memory','iops','latency','telemetry','pulse','logs','syslog','snmp']},
+  {key:'cluster', label:'Cluster Configuration Options', keywords:['rf','replication factor','redundancy','storage container','storage pool','erasure coding','deduplication','compression','thin provisioning','ahv','vlan','network','hypervisor','cvm','stargate','curator','cassandra','zookeeper','medusa','oplog','files','objects','flow','move','metro availability']}
+];
+
 function getQuestionBanks(){
   return {
     A: window.NCA_QUESTIONS_TEST_A || [],
@@ -203,6 +224,48 @@ function escapeHtml(value){
   return String(value || '').replace(/[&<>"']/g, char => ({
     '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
   }[char]));
+}
+
+function inferDomain(question){
+  const text = normalizeText([question.question, ...(question.options || [])].join(' '));
+  let best = {key:'other', label:'Otros / Mixto', hits:0};
+  DOMAIN_DEFINITIONS.forEach(domain => {
+    const hits = domain.keywords.reduce((sum, keyword) => sum + (text.includes(normalizeText(keyword)) ? 1 : 0), 0);
+    if(hits > best.hits) best = {...domain, hits};
+  });
+  return {key: best.key, label: best.label};
+}
+
+function getSelectionStatus(question, selected){
+  const correct = (question.correctAnswers || []).map(normalizeText).filter(Boolean);
+  const chosen = selected.map(normalizeText).filter(Boolean);
+  const selectedCorrect = chosen.filter(answer => correct.includes(answer)).length;
+  const selectedWrong = chosen.filter(answer => !correct.includes(answer)).length;
+  const missing = correct.filter(answer => !chosen.includes(answer)).length;
+  const ok = correct.length === chosen.length && selectedWrong === 0 && missing === 0;
+
+  let label = ok ? 'Correcta' : 'Incorrecta';
+  let type = ok ? 'ok' : 'bad';
+  if(!ok && question.multiple && selectedCorrect > 0 && selectedWrong === 0 && missing > 0){
+    label = 'Incompleta';
+    type = 'warn';
+  }
+  return {ok, label, type, selectedCorrect, selectedWrong, missing, required: correct.length, chosen: chosen.length};
+}
+
+function saveAnswer(question, selected){
+  const status = getSelectionStatus(question, selected);
+  const domain = inferDomain(question);
+  answers[current] = {
+    id: question.id,
+    question: question.question,
+    selected,
+    correctAnswers: question.correctAnswers || [],
+    ok: status.ok,
+    statusLabel: status.label,
+    domain
+  };
+  return status;
 }
 
 function buildQuestionPool(bankChoice){
@@ -312,6 +375,16 @@ function nextQuestion(){
   const question = pool[current];
   const selected = selectedValues();
 
+  if(practice && revealed){
+    if(current < pool.length - 1){
+      current++;
+      renderQuestion();
+    } else {
+      showResults();
+    }
+    return;
+  }
+
   if(!selected.length){
     alert('Seleccioná una respuesta antes de continuar.');
     return;
@@ -319,28 +392,43 @@ function nextQuestion(){
 
   if(practice && !revealed){
     revealed = true;
+    const status = saveAnswer(question, selected);
     const correct = (question.correctAnswers || []).map(normalizeText);
 
     document.querySelectorAll('.option').forEach(optionElement => {
-      const value = normalizeText(optionElement.querySelector('input').value);
-      const checked = optionElement.querySelector('input').checked;
+      const input = optionElement.querySelector('input');
+      const value = normalizeText(input.value);
+      const checked = input.checked;
+      input.disabled = true;
       if(correct.includes(value)) optionElement.classList.add('correct');
-      else if(checked) optionElement.classList.add('wrong');
+      if(checked && !correct.includes(value)) optionElement.classList.add('wrong');
     });
 
-    document.getElementById('answerBox').classList.remove('hidden');
-    document.getElementById('answerBox').innerHTML = '<b>Respuesta correcta:</b><br>' + escapeHtml((question.correctAnswers || []).join(' / '));
+    const answerBox = document.getElementById('answerBox');
+    answerBox.classList.remove('hidden');
+    answerBox.classList.toggle('warn', !status.ok);
+
+    let detail = '';
+    if(question.multiple && !status.ok){
+      if(status.type === 'warn'){
+        detail = `<br><span>Tu selección está incompleta: marcaste ${status.chosen} de ${status.required} respuestas correctas requeridas.</span>`;
+      } else {
+        detail = `<br><span>En selección múltiple se debe marcar exactamente el conjunto correcto. Una opción de más o de menos cuenta como incorrecta.</span>`;
+      }
+    }
+
+    answerBox.innerHTML = `
+      <b>Resultado de tu selección:</b> ${status.ok ? '<span class="pass">Correcta</span>' : '<span class="fail">' + status.label + '</span>'}
+      ${detail}<br><br>
+      <b>Respuesta correcta:</b><br>${escapeHtml((question.correctAnswers || []).join(' / '))}
+    `;
+
+    document.getElementById('scoreLive').textContent = `Respondidas: ${answers.filter(Boolean).length}`;
     document.getElementById('nextBtn').textContent = current === pool.length - 1 ? 'Finalizar' : 'Siguiente pregunta';
     return;
   }
 
-  answers[current] = {
-    id: question.id,
-    question: question.question,
-    selected,
-    correctAnswers: question.correctAnswers || [],
-    ok: isCorrect(question, selected)
-  };
+  saveAnswer(question, selected);
 
   if(current < pool.length - 1){
     current++;
@@ -355,18 +443,48 @@ function showResults(){
   document.getElementById('results').classList.remove('hidden');
 
   const correctCount = answers.filter(answer => answer && answer.ok).length;
-  const percentage = Math.round((correctCount / pool.length) * 100);
+  const percentageExact = pool.length ? (correctCount / pool.length) * 100 : 0;
+  const percentage = Math.round(percentageExact);
+  const scaledScore = Math.round(SCORE_MIN + (percentageExact / 100) * (SCORE_MAX - SCORE_MIN));
+  const passed = scaledScore >= PASS_SCORE;
   const wrongAnswers = answers.filter(answer => answer && !answer.ok);
+
+  const domainStats = {};
+  answers.forEach(answer => {
+    const key = answer?.domain?.key || 'other';
+    const label = answer?.domain?.label || 'Otros / Mixto';
+    if(!domainStats[key]) domainStats[key] = {label, total:0, ok:0};
+    domainStats[key].total++;
+    if(answer.ok) domainStats[key].ok++;
+  });
+
+  const domainHtml = Object.values(domainStats).map(domain => {
+    const pct = Math.round((domain.ok / domain.total) * 100);
+    return `
+      <div class="domainCard">
+        <b>${escapeHtml(domain.label)}</b>
+        <span class="small">${domain.ok}/${domain.total} correctas · ${pct}%</span>
+      </div>
+    `;
+  }).join('');
 
   document.getElementById('results').innerHTML = `
     <h2>Resultado final</h2>
-    <div class="result"><b>${correctCount}/${pool.length}</b> correctas (${percentage}%).</div>
+    <div class="scoreCard">
+      <div class="small">Puntaje escalado simulado</div>
+      <div class="scoreBig">${scaledScore} / ${SCORE_MAX}</div>
+      <div class="result">${passed ? '<span class="pass">APROBADO</span>' : '<span class="fail">NO APROBADO</span>'}</div>
+      <p class="small">Umbral configurado: ${PASS_SCORE} puntos. Resultado base: <b>${correctCount}/${pool.length}</b> correctas (${percentage}%).</p>
+    </div>
     <p class="small">Banco utilizado: ${escapeHtml(activeBankLabel)}</p>
+    <h3>Resultado por tema</h3>
+    <div class="domainGrid">${domainHtml}</div>
     <div class="actions"><button onclick="backToSetup()">Nuevo intento</button></div>
     <h3>Revisión de errores</h3>
     ${wrongAnswers.length ? wrongAnswers.map(answer => `
       <div class="reviewItem">
         <b>${escapeHtml(answer.question)}</b><br>
+        <span class="small">Estado: ${escapeHtml(answer.statusLabel || 'Incorrecta')}</span><br>
         <span class="small">Tu respuesta: ${escapeHtml(answer.selected.join(' / ') || '-')}</span><br>
         <span class="small">Correcta: ${escapeHtml(answer.correctAnswers.join(' / ') || '-')}</span>
       </div>
